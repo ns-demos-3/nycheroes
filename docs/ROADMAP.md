@@ -2398,6 +2398,26 @@ deployed); in a computer's browser the co-op menu links to it.
   moved in. Pointer lock can't be checked there (headless Chrome never
   grants it). The other tests pass as before.
 
+### Optional midtown flight rings
+
+The HUD's **Fly ring course** button takes the local hero to a six-ring
+course 360 m above midtown, already hovering in ordinary flight. Fly north
+through gold rings in order; cyan rings preview the route. The timer starts
+at ring one and stops at ring six. Restart returns to the start and clears
+the run; the best time lasts for the session. Leave hides the course and
+lets free flight continue. Challenge progress is personal in co-op; the hero
+uses the same network-visible flight as everywhere else. Ring crossings use
+world-space swept plane intersections, including at boost speed and after
+origin shifts. Missing a ring requires turning back and crossing northward
+again. There is no time limit, leaderboard, or saved best. No new tile data
+or external assets are needed. `?rings=1` / `-- --rings=1` starts at the
+course; existing WASD, look, Space/C, F and Shift controls apply.
+
+Focused test: `godot --headless --path . res://tests/flight_rings_test.tscn`
+(swept crossing, misses, reverse crossing, order, origin shifts, finish,
+restart and leave). `tools/record_flight_rings.gd` drives ordinary HeroInput
+in the actual world for reproducible native Movie Maker evidence.
+
 ## Constraints
 
 - **Browser first, WebGL 2.** Godot web builds use the Compatibility renderer;
@@ -2524,7 +2544,7 @@ deployed); in a computer's browser the co-op menu links to it.
   with the trains surface around the 7, the 4 on Jerome Avenue and
   Woodlawn; `TRAINS_TERMINAL_ONLY=1` goes straight to Woodlawn).
 - Launch options (URL or `-- --name=value` on desktop): `?cam=x,y,z,yaw,pitch`
-  free camera, `?spawn=x,y,z,yaw` hero start, `?stats` the stats text
+  free camera, `?spawn=x,y,z,yaw` hero start, `?rings=1` flight ring course, `?stats` the stats text
   (also on phones) and console stats, `?quality=low|medium|high`,
   `?mute=1|0`, `?touch=1|0`, `?time=HH:MM`, `?peds=N`, `?gangs=N`, `?traffic=N`, `?trains=N` (0: none), `?demo` / `?demo=fight` / `?demo=city` / `?demo=new` scripted tours for videos,
   `?host` / `?join=CODE` co-op (a private game), `?solo=1` play alone (no

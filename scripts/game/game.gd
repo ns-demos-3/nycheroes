@@ -97,6 +97,10 @@ func _ready() -> void:
 	_add_options(quality)
 	_add_loading_screen()
 	_add_name_prompt()
+	var rings := FlightRings.new()
+	rings.name = "FlightRings"
+	rings.game = self
+	add_child(rings)
 	if not Device.is_web() and bool(Settings.get_value("fullscreen", false)) and not LaunchOptions.has("screenshot"):
 		Device.set_fullscreen(true)
 	if Device.wants_touch_controls() and not LaunchOptions.has("demo"):
