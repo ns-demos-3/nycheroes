@@ -9,6 +9,8 @@ extends Node
 ##   the streets have loaded it stands on a sidewalk beside the building,
 ##   facing it, and can move. Somewhere off the map (Albany) keeps the menu
 ##   open and says so.
+## - Mark resolves without teleporting, the HUD survives origin shifts and
+##   follows camera yaw, options hide it, and Clear/Backspace dismiss it.
 ## - With --online, the real searches: an address and a ZIP code.
 ## Uses a settings file of its own, not the player's.
 ## Run: godot --headless --path . res://tests/address_test.tscn -- --solo=1 [--tiles=DIR] [--online]
@@ -105,6 +107,43 @@ func _check_menu() -> void:
 	_options._address_go.pressed.emit()
 	_check(_options.visible and _options._address_note.text.contains("isn't on the city's map"),
 		"somewhere off the map keeps the menu open and says so (%s)" % _options._address_note.text)
+	# Mark uses the same resolver, keeps the hero in place, and survives rebasing.
+	var waypoint := _world._waypoint
+	var before := _hero.world_position()
+	_options._address.text = EMPIRE_STATE
+	_options._address_mark.pressed.emit()
+	_check(waypoint.active and not _options.visible, "Mark closes the menu and shows a personal waypoint")
+	_check(_hero.world_position().distance_to(before) < 0.01 and not _hero.frozen,
+		"marking an address leaves the hero free at its original location")
+	_options.open()
+	await get_tree().process_frame
+	_check(waypoint.active and not waypoint.visible, "options hide the active card while solo play is paused")
+	_options.close()
+	await get_tree().process_frame
+	_check(waypoint.visible, "resuming restores the active card")
+	var original_guidance := waypoint.guidance()
+	WorldOrigin.shift(Vector3(2000.0, 0.0, -1000.0))
+	_check(waypoint.guidance() == original_guidance, "direction and distance survive an origin shift")
+	WorldOrigin.shift(Vector3(-2000.0, 0.0, 1000.0))
+	var saved_yaw := _world.hero_camera.yaw
+	waypoint.mark(before + Vector3(0.0, 0.0, -100.0), "North")
+	_world.hero_camera.yaw = 0.0
+	_check(waypoint.guidance().begins_with("Ahead · 100 m"), "north is ahead when the camera faces north")
+	_world.hero_camera.yaw = PI / 2.0
+	_check(waypoint.guidance().begins_with("Right"), "guidance follows the camera when looking west")
+	_world.hero_camera.yaw = saved_yaw
+	waypoint.mark(before + Vector3(0.0, 200.0, 0.0), "Above")
+	_check(waypoint.guidance().begins_with("Around here"), "arrival uses ground distance and does not claim an entrance")
+	_options.waypoint_cleared.emit()
+	_check(not waypoint.active and not waypoint.visible, "Clear dismisses the personal waypoint")
+	waypoint.mark(before, "Nearby")
+	var clear_key := InputEventKey.new()
+	clear_key.physical_keycode = KEY_BACKSPACE
+	clear_key.pressed = true
+	Input.parse_input_event(clear_key)
+	await get_tree().process_frame
+	_check(not waypoint.active, "Backspace dismisses guidance during play")
+	_options.open()
 	var chosen: Array = []
 	_options.place_chosen.connect(func(at: Vector3) -> void: chosen.append(at), CONNECT_ONE_SHOT)
 	_options._address.text = EMPIRE_STATE

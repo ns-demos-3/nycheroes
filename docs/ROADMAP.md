@@ -2354,6 +2354,13 @@ deployed); in a computer's browser the co-op menu links to it.
   phones its buttons are 44 px tall, it keeps clear of notches, and its
   page scrolls when the screen is too short. The panel keeps the height of
   its tallest page, so the tabs stay put.
+- **Personal waypoint:** Mark beside Go resolves the same address without moving
+  the hero. A personal HUD card shows camera-relative direction and horizontal
+  straight-line distance; within 30 m it says "Around here" (addresses can be
+  inside buildings). Clear it on the card, in Game options, or with Backspace
+  during play. It lasts for this session only, stays private in co-op, and
+  stores world coordinates so floating-origin shifts preserve guidance. It does
+  not calculate street routes or building entrances and needs no new tiles.
 - **Pausing:** in single player the game pauses while the menu is open
   (the city's sound goes on, so the sliders can be heard, and the stats
   keep counting); in co-op (any Net state but offline) it goes on, and a
@@ -2511,7 +2518,8 @@ deployed); in a computer's browser the co-op menu links to it.
   `res://tests/audio_test.tscn`, `res://tests/options_test.tscn` (the
   options menu and the settings, with a settings file of its own),
   `res://tests/address_test.tscn` (the Go to box: the projection against
-  pyproj's, then the hero sent to the Empire State Building lands on its
+  pyproj's, marking without teleporting, camera-relative direction, near-destination
+  feedback, clearing and floating-origin safety, then the hero sent to the Empire State Building lands on its
   sidewalk facing it; `--online` tries the real searches too) and
   `res://tests/traffic_test.tscn` (75 s of
   midtown traffic: no red light run, no overlaps, cars stop for the hero,
@@ -2524,7 +2532,8 @@ deployed); in a computer's browser the co-op menu links to it.
   with the trains surface around the 7, the 4 on Jerome Avenue and
   Woodlawn; `TRAINS_TERMINAL_ONLY=1` goes straight to Woodlawn).
 - Launch options (URL or `-- --name=value` on desktop): `?cam=x,y,z,yaw,pitch`
-  free camera, `?spawn=x,y,z,yaw` hero start, `?stats` the stats text
+  free camera, `?spawn=x,y,z,yaw` hero start, `?waypoint=x,z` a personal
+  destination in world meters (also `-- --waypoint=x,z` on desktop), `?stats` the stats text
   (also on phones) and console stats, `?quality=low|medium|high`,
   `?mute=1|0`, `?touch=1|0`, `?time=HH:MM`, `?peds=N`, `?gangs=N`, `?traffic=N`, `?trains=N` (0: none), `?demo` / `?demo=fight` / `?demo=city` / `?demo=new` scripted tours for videos,
   `?host` / `?join=CODE` co-op (a private game), `?solo=1` play alone (no

@@ -29,6 +29,9 @@ signal toggled(open: bool)
 ## The Go to box found a place on the map (world position, y 0); the menu
 ## has closed. Game takes the hero there (Game.travel_to).
 signal place_chosen(world_position: Vector3)
+## Mark searches the same address without moving the hero.
+signal waypoint_chosen(world_position: Vector3, label: String)
+signal waypoint_cleared()
 
 const WIDTH := 690.0
 const NOTE_COLOR := Color(1.0, 1.0, 1.0, 0.55)
@@ -98,6 +101,8 @@ var _sound: Button
 var _invert: Button
 var _address: LineEdit
 var _address_go: Button
+var _address_mark: Button
+var _mark_requested := false
 var _address_note: Label
 var _search: AddressSearch
 var _sliders := {}  # setting key -> HSlider
@@ -448,6 +453,12 @@ func _game_page() -> VBoxContainer:
 	_address_go.custom_minimum_size.x = 64.0
 	_address_go.pressed.connect(_go_to_address)
 	go_to.add_child(_address_go)
+	_address_mark = Button.new()
+	_address_mark.text = "Mark"
+	_address_mark.tooltip_text = "Navigate there under your own power"
+	_address_mark.custom_minimum_size = Vector2(64.0, 44.0)
+	_address_mark.pressed.connect(func() -> void: _go_to_address(true))
+	go_to.add_child(_address_mark)
 	if _touch:
 		_address.custom_minimum_size.y = 44.0
 		_address_go.custom_minimum_size.y = 44.0
@@ -457,9 +468,14 @@ func _game_page() -> VBoxContainer:
 			field.capitals = false
 			go_to.add_child(field)
 	_row(page, "Go to", go_to)
-	_address_note = _note("A street address in the five boroughs, like 350 5th Ave, Manhattan.")
+	_address_note = _note("Go travels instantly. Mark shows personal direction and ground distance. Try 350 5th Ave, Manhattan.")
 	_address_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	page.add_child(_address_note)
+	var clear_waypoint := Button.new()
+	clear_waypoint.text = "Clear personal waypoint"
+	clear_waypoint.custom_minimum_size.y = 44.0
+	clear_waypoint.pressed.connect(func() -> void: waypoint_cleared.emit())
+	page.add_child(clear_waypoint)
 	var levels := HBoxContainer.new()
 	levels.add_theme_constant_override("separation", 6)
 	var group := ButtonGroup.new()
@@ -501,16 +517,24 @@ func _game_page() -> VBoxContainer:
 	return page
 
 
-func _go_to_address() -> void:
+func _go_to_address(mark_only := false) -> void:
+	_mark_requested = mark_only
 	_show_address_note("Looking it up...")
 	_address_go.disabled = true
+	_address_mark.disabled = true
 	_search.search(_address.text)
 
 
 func _on_place_found(world_position: Vector3, label: String) -> void:
 	_address_go.disabled = false
+	_address_mark.disabled = false
 	if city and not city.covers(world_position):
 		_show_address_note("%s isn't on the city's map." % label)
+		return
+	if _mark_requested:
+		_show_address_note("Marked %s." % label)
+		close()
+		waypoint_chosen.emit(world_position, label)
 		return
 	_show_address_note("Went to %s." % label)
 	close()
@@ -519,6 +543,7 @@ func _on_place_found(world_position: Vector3, label: String) -> void:
 
 func _show_address_note(text: String) -> void:
 	_address_go.disabled = false
+	_address_mark.disabled = false
 	_address_note.text = text
 
 

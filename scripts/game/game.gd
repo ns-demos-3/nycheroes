@@ -69,6 +69,7 @@ var _drop_tries := 0
 var _arrival := Vector3.INF
 var _touch_controls: TouchControls
 var _options: OptionsPanel
+var _waypoint: PersonalWaypoint
 var _name_prompt: NamePrompt
 var _loading: LoadingScreen
 
@@ -333,6 +334,17 @@ func _add_options(quality: Quality) -> void:
 	hud.add_child(_options)
 	_options.toggled.connect(func(_open: bool) -> void: _update_controls())
 	_options.place_chosen.connect(travel_to)
+	_waypoint = PersonalWaypoint.new()
+	_waypoint.name = "PersonalWaypoint"
+	_waypoint.hero = hero
+	_waypoint.camera = hero_camera
+	_waypoint.options = _options
+	hud.add_child(_waypoint)
+	_options.waypoint_chosen.connect(_waypoint.mark)
+	_options.waypoint_cleared.connect(_waypoint.dismiss)
+	var destination := LaunchOptions.get_floats("waypoint")
+	if destination.size() == 2 and is_finite(destination[0]) and is_finite(destination[1]):
+		_waypoint.mark(Vector3(destination[0], 0.0, destination[1]), "Personal waypoint")
 	var game_hud := hud.get_node_or_null("GameHud") as GameHud
 	if game_hud:
 		game_hud.options_requested.connect(func() -> void:
