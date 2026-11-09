@@ -2,7 +2,7 @@
 
 `health_warning_replay.tscn` runs the actual `scenes/world.tscn`. It drives
 ordinary `HeroInput`: walk toward the nearest naturally spawned gang, take
-normal punches until knocked out, wait for automatic get-up and one more
+normal punches until knocked out, wait for automatic get-up and up to five seconds for another
 normal hit, then toggle flight and ascend out of reach to recover. It never
 sets health, damages the hero, changes physics/timers, or places enemies.
 The camera stays in the normal third-person view; the stats overlay is hidden
@@ -32,3 +32,8 @@ FINISHED_FRAME in rendered frames. Extract a continuous 12–25 second window
 from the low-health encounter with ffmpeg; retain 30 FPS and original timing,
 without interpolation or speed changes. The recording is muted deliberately.
 Keep full native output and logs outside git.
+
+For a longer recovery demonstration, add `--replay_recovery=1`. This replay-only
+option escapes as soon as natural punches take health to 30 or below, then
+waits in normal flight while the unchanged four-second delay and regeneration
+run. Record it separately and label cuts between runs when combining clips.

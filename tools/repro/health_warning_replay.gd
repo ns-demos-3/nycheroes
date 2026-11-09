@@ -8,6 +8,7 @@ var phase_time := 0.0
 var last_notice := ""
 var frame := 0
 var first_low_frame := -1
+var _flight_requested := false
 
 func _ready() -> void:
 	call_deferred("start")
@@ -42,6 +43,10 @@ func _physics_process(delta: float) -> void:
 	if first_low_frame < 0 and notice.begins_with("LOW HEALTH"):
 		first_low_frame = frame
 		print("[replay] FIRST_LOW_FRAME=%d" % frame)
+	if phase == 0 and LaunchOptions.has("replay_recovery") and hero.health <= 30.0 and hero.mode.name == &"OnFoot":
+		phase = 3
+		phase_time = 0.0
+		print("[replay] RECOVERY_ESCAPE_FRAME=%d" % frame)
 	var thug := game.encounters.nearest_thug(hero.world_position())
 	if phase == 0 and thug:
 		var offset := thug.global_position - hero.global_position
@@ -64,7 +69,8 @@ func _physics_process(delta: float) -> void:
 			phase = 3
 			phase_time = 0.0
 	elif phase == 3:
-		if phase_time <= delta:
+		if not _flight_requested:
+			_flight_requested = true
 			hero.input.fly_toggle_pressed = true
 		hero.input.vertical = 1.0 if phase_time < 1.0 else 0.0
 		if phase_time > 10.0:
