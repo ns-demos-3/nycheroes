@@ -26,6 +26,11 @@ const COMBO := [
 var step := 0
 ## Goes up by one with every punch, so the animator knows to restart.
 var punch_id := 0
+## Local feedback counts connected punches, never animation stages or victims.
+## Other players still receive the existing step / punch_id animation state.
+var connected_punches := 0
+var feedback := ""
+var feedback_left := 0.0
 
 var _time := 0.0
 var _struck := false
@@ -33,9 +38,29 @@ var _queued := false
 var _target: Thug
 
 
+func _process(delta: float) -> void:
+	feedback_left = maxf(0.0, feedback_left - delta)
+	if feedback_left == 0.0:
+		feedback = ""
+
+
+func _reset_feedback(reason: String) -> void:
+	if connected_punches > 0:
+		feedback = reason
+		feedback_left = 0.8
+	connected_punches = 0
+
+
+func exit() -> void:
+	if connected_punches < COMBO.size():
+		_reset_feedback("COMBO ENDED")
+
+
 func enter(_previous: StringName) -> void:
 	hero.motion_mode = CharacterBody3D.MOTION_MODE_GROUNDED
 	step = 0
+	connected_punches = 0
+	feedback = ""
 	_start_punch()
 
 
@@ -73,7 +98,17 @@ func physics_update(delta: float) -> StringName:
 		_struck = true
 		var forward := hero.forward()
 		var push: Vector3 = forward * punch.push + Vector3.UP * (punch.push * 0.4 if punch.launch else 1.5)
-		Combat.strike(hero.global_position + forward + Vector3.UP * 1.1, hit_radius, punch.damage, push, punch.launch)
+		var hits := Combat.strike(hero.global_position + forward + Vector3.UP * 1.1, hit_radius, punch.damage, push, punch.launch)
+		if hits > 0:
+			connected_punches += 1
+			feedback = "PUNCH %d / 3" % connected_punches
+			if connected_punches == 2 and step == 1:
+				feedback = "2 / 3  ·  FINISHER NEXT"
+			elif connected_punches == 3:
+				feedback = "3 / 3  ·  FINISHER!"
+			feedback_left = 1.2
+		else:
+			_reset_feedback("MISSED · COMBO RESET")
 	if _time >= punch.length:
 		if _queued and step < COMBO.size() - 1:
 			step += 1

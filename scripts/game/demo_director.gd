@@ -40,6 +40,7 @@ var _caption: Label
 ## loaded while holding before it.
 var _flight := {}
 var _holding := false
+var _last_combo_feedback := ""
 var _loaded_time := 0.0
 
 
@@ -90,6 +91,17 @@ func _ready() -> void:
 					[21.5, 21.5]),
 			_shot("", 0.5),
 		]
+	elif LaunchOptions.get_string("demo") == "combo":
+		_yaw = _avenue_yaw
+		camera.yaw = _yaw
+		_shots = [
+			_shot("Misses earn no combo", 2.0, _punch_input, _fight_camera),
+			_shot("Connect punches to build a combo", 3.0, Callable(), _fight_camera, _spawn_gang_ahead.bind(10.0, 5)),
+			_shot("", 6.5, _punch_input, _punch_camera),
+			_shot("Pause ends the chain", 2.0, Callable(), _fight_camera),
+			_shot("", 5.0, _punch_input, _fight_camera),
+			_shot("", 1.5, Callable(), _fight_camera),
+		]
 	elif LaunchOptions.get_string("demo") == "fight":
 		_yaw = _avenue_yaw
 		camera.yaw = _yaw
@@ -117,6 +129,11 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if LaunchOptions.get_string("demo") == "combo":
+		var melee := hero.get_mode(&"Melee") as MeleeMode
+		if melee.feedback != _last_combo_feedback:
+			_last_combo_feedback = melee.feedback
+			print("[combo] frame %d: %s" % [Engine.get_process_frames(), melee.feedback])
 	hero.input.clear()
 	hero.input.aim = AVENUE
 	if _index < 0:
@@ -124,7 +141,7 @@ func _physics_process(delta: float) -> void:
 			return
 		_settle -= delta
 		if _settle <= 0.0:
-			print("[demo] start")
+			print("[demo] start (frame %d)" % Engine.get_process_frames())
 			_begin(0)
 		return
 	if _index >= _shots.size():

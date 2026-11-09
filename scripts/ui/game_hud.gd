@@ -97,6 +97,7 @@ func _draw() -> void:
 	_text(Vector2(bar.end.x + 24.0, bar.end.y - 2.0), "Thugs down: %d" % Combat.defeated_count, 18)
 	if hero.mode.name == &"KnockedOut":
 		_text(Vector2(size.x * 0.5 - 110.0, size.y * 0.35), "KNOCKED OUT", 40, MARKER_COLOR)
+	_draw_combo()
 	_draw_coop_status()
 	if city and city.photo_count > 0:
 		var width := _font.get_string_size(AERIAL_CREDIT, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12).x
@@ -228,3 +229,15 @@ func _add_options_button() -> void:
 func _text(at: Vector2, text: String, font_size: int, color := Color.WHITE) -> void:
 	draw_string_outline(_font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, 4, Color.BLACK)
 	draw_string(_font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, color)
+
+
+## Brief, centered above the hero; a dark backing stays readable over the city.
+func _draw_combo() -> void:
+	var melee := hero.get_mode(&"Melee") as MeleeMode
+	if melee.feedback.is_empty():
+		return
+	var color := NOTICE_COLOR if melee.connected_punches >= 2 else Color.WHITE
+	var width := _font.get_string_size(melee.feedback, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 24).x
+	var at := Vector2((size.x - width) * 0.5, size.y * 0.32)
+	draw_rect(Rect2(at + Vector2(-16.0, -29.0), Vector2(width + 32.0, 43.0)), Color(0.02, 0.03, 0.06, 0.85))
+	_text(at, melee.feedback, 24, color)
