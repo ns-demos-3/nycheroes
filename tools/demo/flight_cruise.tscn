@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tools/demo/flight_cruise.gd" id="1"]
+
+[node name="FlightCruiseWalkthrough" type="Node"]
+script = ExtResource("1")

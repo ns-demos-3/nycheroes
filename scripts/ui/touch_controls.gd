@@ -9,6 +9,7 @@ extends Control
 ##   JUMP   jump (hold for a super jump); while flying it's UP
 ##   DOWN   descend, while flying
 ##   WEB    web (hold to swing), not while flying
+##   CRUISE holds forward while flying (in WEB's place; lit while on)
 ##   FLY    fly_toggle (lit while flying)
 ##   SPEED  super speed as a toggle (lit while on): it stays on until tapped
 ##          again or the stick has been let go for a moment
@@ -142,6 +143,7 @@ func _ready() -> void:
 	_add(&"jump", "JUMP", &"jump", false, true)
 	_add(&"down", "DOWN", &"descend")
 	_add(&"web", "WEB", &"web", false, true)
+	_add(&"cruise", "CRUISE", &"flight_cruise")
 	_add(&"fly", "FLY", &"fly_toggle")
 	_add(&"speed", "SPEED", &"sprint", true)
 	_add(&"coop", "CO-OP", &"")
@@ -393,6 +395,10 @@ func _menu_open() -> bool:
 
 ## Labels and which buttons show follow what the hero is doing.
 func _update_hero_state(delta: float) -> void:
+	var cruise: TouchButton = _by_id[&"cruise"]
+	if cruise.on != hero.flight_cruise:
+		cruise.on = hero.flight_cruise
+		queue_redraw()
 	var mode: StringName = hero.mode.name if hero.mode else &""
 	_air_time = 0.0 if hero.is_on_floor() or hero.is_in_water() else _air_time + delta
 	var airborne := _air_time > AIR_LABEL_DELAY and mode != &"Melee"
@@ -406,6 +412,7 @@ func _update_hero_state(delta: float) -> void:
 	(_by_id[&"fly"] as TouchButton).on = flying
 	_show(&"down", flying)
 	_show(&"web", not flying)
+	_show(&"cruise", flying)
 	queue_redraw()
 
 
@@ -442,6 +449,7 @@ func _layout() -> void:
 	_place(&"jump", punch + Vector2(-104.0, 8.0), 36.0)
 	_place(&"down", punch + Vector2(-190.0, 8.0), 32.0)
 	_place(&"web", punch + Vector2(6.0, -100.0), 36.0)
+	_place(&"cruise", punch + Vector2(6.0, -100.0), 36.0)
 	_place(&"speed", punch + Vector2(-88.0, -84.0), 31.0)
 	_place(&"fly", punch + Vector2(-14.0, -182.0), 31.0)
 	# The gear in the top right corner, co-op to its left, then full screen

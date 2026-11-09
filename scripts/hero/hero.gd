@@ -33,6 +33,8 @@ const HURT_TIME := 0.35
 const STEP_EASE_SPEED := 2.5
 
 var input := HeroInput.new()
+## Forward flight stays engaged until cancelled; synced as a peer state flag.
+var flight_cruise := false
 ## Yaw the hero faces, in radians (0 = north, which is -Z).
 var facing := 0.0
 var mode: HeroMode
@@ -103,6 +105,7 @@ func _physics_process(delta: float) -> void:
 	var fall_speed := -velocity.y
 	var next := mode.physics_update(delta)
 	input.fly_toggle_pressed = false
+	input.cruise_toggle_pressed = false
 	if next != &"" and next != mode.name:
 		set_mode(next)
 	if global_position.y > WorldOrigin.CEILING:
@@ -124,6 +127,7 @@ func _physics_process(delta: float) -> void:
 func set_mode(mode_name: StringName, run_hooks := true) -> void:
 	if mode and mode.name == mode_name and not run_hooks:
 		return
+	flight_cruise = false
 	var previous: StringName = mode.name if mode else &""
 	if mode and run_hooks:
 		mode.exit()
@@ -190,6 +194,7 @@ func face_toward(direction: Vector3, max_step := INF) -> void:
 func take_hit(damage: float, push: Vector3) -> void:
 	if not can_be_attacked() or mode.name == &"Dive":
 		return
+	flight_cruise = false
 	health = maxf(health - damage, 0.0)
 	hurt_time = HURT_TIME
 	_regen_delay = REGEN_DELAY

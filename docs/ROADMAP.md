@@ -2398,6 +2398,24 @@ deployed); in a computer's browser the co-op menu links to it.
   moved in. Pointer lock can't be checked there (headless Chrome never
   grants it). The other tests pass as before.
 
+### Flight cruise control
+
+While flying, R / right-stick click or the HUD cruise button holds forward
+travel along the camera aim, leaving steering, climb/descend and held boost
+unchanged. Pull back to cancel, or toggle again to ease to a hover. The HUD
+shows ON/OFF and a cancel hint; touch screens get a lit CRUISE button
+in place of WEB during flight.
+Cruise resets on leaving flight, a collision, damage, menus, free camera or
+application focus loss. It starts off every flight and never auto-boosts.
+PlayerSync carries its state in the existing flags field. No autopilot or
+obstacle avoidance is provided.
+
+Focused test: `godot --headless --path . res://tests/flight_cruise_test.tscn`.
+No cruise launch flag; use `?solo=1&spawn=420,190,-220,-29&quality=low`
+for an airborne manual check, then F and R. The reproducible native video
+walkthrough is `res://tools/demo/flight_cruise.tscn` (run with the command
+in its script header); it feeds ordinary Input actions through PlayerInput.
+
 ## Constraints
 
 - **Browser first, WebGL 2.** Godot web builds use the Compatibility renderer;
@@ -2500,6 +2518,8 @@ deployed); in a computer's browser the co-op menu links to it.
   `tools/cloudflare/.dev.vars`, gitignored); $0.05/GB after 1,000 GB free.
 - Tests (headless): `godot --headless --path . res://tests/hero_moves_test.tscn`,
   `res://tests/combat_test.tscn`, `res://tests/streaming_test.tscn`,
+  `res://tests/flight_cruise_test.tscn` (cruise, steering, cancellation,
+  floating origin and the co-op state flag; no tiles needed),
   `res://tests/coop_test.tscn`, `res://tests/coop_migration_test.tscn`,
   `res://tests/coop_reconnect_test.tscn` and
   `res://tests/coop_public_test.tscn` (they run the signaling server, so

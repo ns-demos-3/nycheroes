@@ -45,6 +45,7 @@ var touch_controls: TouchControls:
 var _font: Font
 var _notices: Array = []  # [text, msec when it goes]
 var _options_button: Button
+var _cruise_button: Button
 
 
 func _ready() -> void:
@@ -66,6 +67,17 @@ func _ready() -> void:
 		if Net.is_online() and not Net.is_public:
 			notify("You're the host now" if id == Net.local_id() else "%s is now the host" % Net.player_name(id)))
 	_add_options_button()
+	_cruise_button = Button.new()
+	_cruise_button.name = "FlightCruiseButton"
+	_cruise_button.focus_mode = Control.FOCUS_NONE
+	_cruise_button.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_cruise_button.offset_left = -150.0
+	_cruise_button.offset_right = 150.0
+	_cruise_button.offset_top = -110.0
+	_cruise_button.offset_bottom = -66.0
+	_cruise_button.custom_minimum_size = Vector2(300.0, 44.0)
+	_cruise_button.pressed.connect(func() -> void: hero.input.cruise_toggle_pressed = true)
+	add_child(_cruise_button)
 
 
 ## Shows a line near the top of the screen for a few seconds.
@@ -81,6 +93,12 @@ func current_notices() -> PackedStringArray:
 
 
 func _process(_delta: float) -> void:
+	_cruise_button.visible = hero.mode.name == &"Flight" and not hero.frozen
+	_cruise_button.text = "CRUISE ON  ·  tap to stop" if hero.flight_cruise else "CRUISE OFF  ·  R / tap to start"
+	if touch_controls:
+		_cruise_button.text = "CRUISE ON · CRUISE to stop" if hero.flight_cruise else "CRUISE OFF · tap CRUISE"
+		_cruise_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cruise_button.modulate = Color(0.5, 1.0, 0.8) if hero.flight_cruise else Color.WHITE
 	queue_redraw()
 
 
@@ -97,6 +115,8 @@ func _draw() -> void:
 	_text(Vector2(bar.end.x + 24.0, bar.end.y - 2.0), "Thugs down: %d" % Combat.defeated_count, 18)
 	if hero.mode.name == &"KnockedOut":
 		_text(Vector2(size.x * 0.5 - 110.0, size.y * 0.35), "KNOCKED OUT", 40, MARKER_COLOR)
+	if hero.flight_cruise:
+		_text(Vector2(size.x * 0.5 - 145.0, size.y - 120.0), "Steer to fly · pull back to cancel", 17)
 	_draw_coop_status()
 	if city and city.photo_count > 0:
 		var width := _font.get_string_size(AERIAL_CREDIT, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12).x

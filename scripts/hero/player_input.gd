@@ -6,7 +6,11 @@ extends Node
 @export var hero: Hero
 @export var camera_rig: ThirdPersonCamera
 
-var enabled := true
+var enabled := true:
+	set(value):
+		enabled = value
+		if not value and hero:
+			hero.flight_cruise = false
 
 
 func _ready() -> void:
@@ -26,5 +30,12 @@ func _physics_process(_delta: float) -> void:
 	input.sprint_held = Input.is_action_pressed("sprint")
 	input.web_held = Input.is_action_pressed("web")
 	input.attack_held = Input.is_action_pressed("attack")
+	if Input.is_action_just_pressed("flight_cruise"):
+		input.cruise_toggle_pressed = true
 	if Input.is_action_just_pressed("fly_toggle"):
 		input.fly_toggle_pressed = true
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and hero:
+		hero.flight_cruise = false

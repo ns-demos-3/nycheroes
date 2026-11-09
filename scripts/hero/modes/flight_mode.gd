@@ -18,11 +18,13 @@ var _boost_time := 0.0
 
 func enter(_previous: StringName) -> void:
 	_boost_time = 0.0
+	hero.flight_cruise = false
 	hero.motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
 
 
 func exit() -> void:
 	_boost_time = 0.0
+	hero.flight_cruise = false
 	hero.motion_mode = CharacterBody3D.MOTION_MODE_GROUNDED
 
 
@@ -33,9 +35,14 @@ func physics_update(delta: float) -> StringName:
 	if hero.attack_pressed:
 		return &"Dive"
 
+	if input.cruise_toggle_pressed:
+		hero.flight_cruise = not hero.flight_cruise
+	# Pulling back is an immediate brake; no queued cruise after a collision.
+	if input.stick.y > 0.2:
+		hero.flight_cruise = false
 	var forward := input.aim
 	var right := forward.cross(Vector3.UP).normalized()
-	var wish := forward * -input.stick.y + right * input.stick.x + Vector3.UP * input.vertical
+	var wish := forward * (1.0 if hero.flight_cruise else -input.stick.y) + right * input.stick.x + Vector3.UP * input.vertical
 	if wish.length() > 0.05:
 		var boosting := input.sprint_held
 		# Don't charge while hovering or pushing into a wall. Releasing boost
@@ -52,6 +59,8 @@ func physics_update(delta: float) -> StringName:
 		_boost_time = 0.0
 		hero.velocity *= exp(-hover_damping * delta)
 	hero.move_and_slide()
+	if hero.get_slide_collision_count() > 0:
+		hero.flight_cruise = false
 
 	var flat := Vector3(hero.velocity.x, 0.0, hero.velocity.z)
 	hero.face_toward(flat if flat.length() > 2.0 else forward, 6.0 * delta)
