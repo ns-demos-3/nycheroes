@@ -63,11 +63,11 @@ class RingPilot extends Node:
 		elif not result_logged:
 			result_logged = true
 			print("[rings recording] FINISH checkpoints=", course.checkpoint, " time=", course.elapsed)
-		if time > 23.0 and not restarted:
+		if time > 24.0 and not restarted:
 			restarted = true
 			course.restart()
 			print("[rings recording] RESTART checkpoints=", course.checkpoint, " time=", course.elapsed, " best=", course.best)
-		if time > 24.0:
+		if time > 25.0:
 			print("[rings recording] final_frame=", Engine.get_process_frames())
 			get_tree().quit()
 
