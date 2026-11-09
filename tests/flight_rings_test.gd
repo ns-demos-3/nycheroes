@@ -11,6 +11,13 @@ func _ready() -> void:
 	assert(not FlightRings.crosses_ring(center, center, center))
 	var world := load("res://scenes/world.tscn").instantiate() as Game
 	add_child(world)
+	# A consumed HUD click must not become the raw mouse attack / flight dive.
+	Input.action_press("attack")
+	world.player_input.attack_blocked = true
+	world.player_input._physics_process(0.016)
+	assert(not world.hero.input.attack_held)
+	Input.action_release("attack")
+	world.player_input.attack_blocked = false
 	var course := world.get_node("FlightRings") as FlightRings
 	course.restart()
 	world.city.initial_load_finished.emit(0.0)

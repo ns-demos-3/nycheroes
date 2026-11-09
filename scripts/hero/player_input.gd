@@ -7,6 +7,9 @@ extends Node
 @export var camera_rig: ThirdPersonCamera
 
 var enabled := true
+## HUD buttons consume GUI events, but the raw mouse action stays pressed.
+## Challenge buttons hold this until release so a click cannot trigger a dive.
+var attack_blocked := false
 
 
 func _ready() -> void:
@@ -25,6 +28,6 @@ func _physics_process(_delta: float) -> void:
 	input.jump_held = Input.is_action_pressed("jump")
 	input.sprint_held = Input.is_action_pressed("sprint")
 	input.web_held = Input.is_action_pressed("web")
-	input.attack_held = Input.is_action_pressed("attack")
+	input.attack_held = Input.is_action_pressed("attack") and not attack_blocked
 	if Input.is_action_just_pressed("fly_toggle"):
 		input.fly_toggle_pressed = true

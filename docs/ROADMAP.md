@@ -2415,7 +2415,7 @@ course; existing WASD, look, Space/C, F and Shift controls apply.
 
 Focused test: `godot --headless --path . res://tests/flight_rings_test.tscn`
 (swept crossing, misses, reverse crossing, order, origin shifts, finish,
-restart and leave). `tools/record_flight_rings.gd` drives ordinary HeroInput
+restart, leave and consumed HUD clicks). `tools/record_flight_rings.gd` drives ordinary HeroInput
 in the actual world for reproducible native Movie Maker evidence.
 
 ## Constraints

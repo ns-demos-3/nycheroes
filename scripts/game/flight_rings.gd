@@ -141,6 +141,9 @@ func _make_ui() -> void:
 	_leave.focus_mode = Control.FOCUS_NONE
 	_leave.pressed.connect(leave)
 	buttons.add_child(_leave)
+	for button: Button in [_start, _leave]:
+		button.button_down.connect(func() -> void: game.player_input.attack_blocked = true)
+		button.button_up.connect(func() -> void: game.player_input.attack_blocked = false)
 	_update_ui()
 
 
@@ -160,6 +163,8 @@ func _update_ui() -> void:
 
 
 func _process(_delta: float) -> void:
+	if not Input.is_action_pressed("attack"):
+		game.player_input.attack_blocked = false
 	var debug := game.hud.get_node_or_null("DebugLabel") as Control
 	_panel.position.y = 126.0 if debug and debug.visible else 76.0
 	_panel.size.x = minf(430.0, get_viewport().get_visible_rect().size.x - 40.0)
