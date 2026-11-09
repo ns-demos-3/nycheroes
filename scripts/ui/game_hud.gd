@@ -97,6 +97,7 @@ func _draw() -> void:
 	_text(Vector2(bar.end.x + 24.0, bar.end.y - 2.0), "Thugs down: %d" % Combat.defeated_count, 18)
 	if hero.mode.name == &"KnockedOut":
 		_text(Vector2(size.x * 0.5 - 110.0, size.y * 0.35), "KNOCKED OUT", 40, MARKER_COLOR)
+	_draw_swing_feedback()
 	_draw_coop_status()
 	if city and city.photo_count > 0:
 		var width := _font.get_string_size(AERIAL_CREDIT, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12).x
@@ -118,6 +119,26 @@ func _draw() -> void:
 		var other: Hero = players.remote_heroes[id]
 		_draw_marker(other.global_position + Vector3.UP * 2.6, Net.player_name(id).to_upper(),
 			Net.player_color(id).lightened(0.35), PLAYER_NEAR_ENOUGH)
+
+
+## One quiet, local cue. The marker is the wall attachment; taut/slack comes
+## from the physics pivot, which can differ from that visible point.
+func _draw_swing_feedback() -> void:
+	if hero.frozen or hero.is_remote():
+		return
+	var swing := hero.get_mode(&"Swing") as SwingMode
+	var attached := hero.mode.name == &"Swing"
+	if not attached and (hero.mode.name != &"OnFoot" or swing.unavailable_time <= 0.0):
+		return
+	var color := Color(0.5, 0.9, 1.0) if attached else Color(1.0, 0.77, 0.4)
+	var line := "WEB ATTACHED · " + ("TAUT" if swing.rope_taut else "SLACK") if attached else "NO ANCHOR · aim at taller buildings"
+	var font_size := 16
+	var width := _font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+	var at := Vector2((size.x - width) * 0.5, size.y * 0.72)
+	draw_rect(Rect2(at + Vector2(-12.0, -23.0), Vector2(width + 24.0, 34.0)), Color(0.02, 0.05, 0.09, 0.8))
+	_text(at, line, font_size, color)
+	if attached:
+		_draw_marker(swing.web_point, "WEB", color, 0.0)
 
 
 func _draw_coop_status() -> void:

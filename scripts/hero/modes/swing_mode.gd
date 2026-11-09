@@ -32,6 +32,15 @@ const MIN_ROPE := 8.0
 var anchor := Vector3.ZERO
 var web_point := Vector3.ZERO
 var rope_length := 0.0
+## Local feedback only: attempts are not queued as HUD notices or sent to peers.
+var unavailable_time := 0.0
+## Whether the hand exceeded the existing pendulum rope length this physics tick.
+## This is a constraint state, not a simulated force or the visible wall distance.
+var rope_taut := false
+
+
+func _process(delta: float) -> void:
+	unavailable_time = maxf(0.0, unavailable_time - delta)
 
 
 func _ready() -> void:
@@ -75,7 +84,9 @@ func try_attach() -> bool:
 				web_point = point
 				anchor = pivot
 				rope_length = rope
-	return best_score > -INF
+	var attached := best_score > -INF
+	unavailable_time = 0.0 if attached else 0.9
+	return attached
 
 
 func _floor_below(space: PhysicsDirectSpaceState3D, from: Vector3) -> float:
@@ -95,6 +106,7 @@ func _swing_direction() -> Vector3:
 
 
 func enter(_previous: StringName) -> void:
+	rope_taut = (hero.global_position + Vector3.UP * HAND_HEIGHT).distance_to(anchor) > rope_length
 	hero.motion_mode = CharacterBody3D.MOTION_MODE_GROUNDED
 	if hero.is_on_floor():
 		hero.velocity.y = 12.0  # hop off the ground into the swing
@@ -117,7 +129,8 @@ func physics_update(delta: float) -> StringName:
 	var hand := hero.global_position + Vector3.UP * HAND_HEIGHT
 	var to_anchor := anchor - hand
 	var distance := to_anchor.length()
-	if distance > rope_length:
+	rope_taut = distance > rope_length
+	if rope_taut:
 		# The web is taut: no moving away from the anchor, and reel in any slack
 		# (quickly at first, e.g. when the swing starts from the ground).
 		var toward := to_anchor / distance

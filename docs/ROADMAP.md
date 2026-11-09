@@ -36,6 +36,30 @@ Running, 60 m/s super speed, charged super jumps (~100 m), flight up to
 the hero is driven by a plain input object per physics tick so a network
 peer can drive one later. Nearby tiles get collision.
 
+### Web swing feedback
+
+Holding E / right mouse / gamepad right trigger / touch WEB shows one local
+cue while attached: TAUT when the existing pendulum constraint pulls and
+SLACK when inside the rope length. A WEB marker points to the actual wall
+attachment, including when it is off screen. The wall attachment and physics
+pivot differ by design; this is not a force meter. Failed attachment attempts
+show “NO ANCHOR · aim at taller buildings” for 0.9 s, refreshed in place on
+existing retries rather than stacking notices. Success clears it immediately.
+No forces, anchor selection, release boost or peer state changed.
+
+Focused check: `godot --headless --path . res://tests/swing_feedback_test.tscn`
+uses synthetic collision and checks failure, success, taut/slack and an origin
+shift. `hero_moves_test` still covers consecutive real-city swings.
+Reproducible native gameplay: `godot --path . --resolution 1280x720
+--write-movie /tmp/swing.avi --fixed-fps 30 res://tools/swing_feedback_demo.tscn
+-- --tiles_url=http://localhost:8060/tiles --quality=low --solo=1
+--name=SwingReview --peds=0 --traffic=0 --gangs=0`. The driver loads the main
+world, places the hero on an avenue using the normal spawn API, waits for city
+streaming, and feeds ordinary HeroInput web holds/releases and movement for
+19 seconds. `--evidence_dir=/existing/directory` saves representative native
+frames. Trim loading frames from the movie without changing playback speed.
+For manual web review use `?quality=low&solo=1&name=SwingReview&spawn=420,20,-220,-29`.
+
 ## 3. Street fights (done)
 
 - Pedestrians walk real sidewalk lanes (traced from street data), run from
