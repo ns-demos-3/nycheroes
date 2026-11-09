@@ -90,6 +90,18 @@ func _ready() -> void:
 					[21.5, 21.5]),
 			_shot("", 0.5),
 		]
+	elif LaunchOptions.get_string("demo") == "landing":
+		hero.landed.connect(func(speed: float) -> void: print("[landing demo] contact %.1f m/s at %.2f s" % [speed, _time]))
+		_yaw = _avenue_yaw + 0.6
+		_pitch = -0.45
+		_shots = [
+			_shot("Landing impact feedback", 2.0),
+			_shot("Small jumps stay quiet", 2.0, _landing_jump.bind(0.1)),
+			_shot("Hard landings: a little dust", 3.6, _landing_jump.bind(0.22)),
+			_shot("Super jumps: a stronger impact", 7.0, _landing_jump.bind(1.0)),
+			_shot("Dive slam", 4.5, _landing_dive),
+			_shot("Camera shake can be disabled in Controls", 2.0),
+		]
 	elif LaunchOptions.get_string("demo") == "fight":
 		_yaw = _avenue_yaw
 		camera.yaw = _yaw
@@ -359,3 +371,14 @@ func _make_caption() -> void:
 	_caption.add_theme_constant_override("outline_size", 10)
 	_caption.modulate.a = 0.0
 	layer.add_child(_caption)
+
+
+## Recording uses ordinary jump/attack inputs through the real movement modes.
+func _landing_jump(input: HeroInput, t: float, hold: float) -> void:
+	input.jump_held = t < hold
+
+
+func _landing_dive(input: HeroInput, t: float) -> void:
+	input.jump_held = t < 0.5
+	input.aim = Vector3.DOWN
+	input.attack_held = t > 1.2 and t < 1.3

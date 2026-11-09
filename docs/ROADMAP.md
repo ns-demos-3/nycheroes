@@ -53,6 +53,15 @@ peer can drive one later. Nearby tiles get collision.
 - Punch combos, dive attacks, landing slams and super speed rams; defeated
   thugs ragdoll, bleed, and stay on the street while you're nearby.
 - Hero health, knockouts, and a HUD with a marker to the nearest thug.
+- Landing feedback: contacts above 18 m/s produce a short, local dust puff;
+  combat slams keep their expanding ring with dust that clears in 0.55 s.
+  Dust and camera pulses scale with impact, while ordinary jumps and curbs
+  stay quiet. Camera pulses are damped, bounded, and never added together;
+  Controls → Camera shake on impacts disables both landing and combat shake
+  at once and is saved between visits. Ground effects remain readable with
+  shake off. Damage, slam thresholds/radii, knockback and movement are unchanged.
+  Ordinary contact dust on co-op copies follows their interpolated landed
+  signal; slams keep the existing reliable world-position effect event.
 
 ## 4. All five boroughs and bridges (done)
 
@@ -2499,7 +2508,10 @@ deployed); in a computer's browser the co-op menu links to it.
   `TURN_KEY_ID` / `TURN_KEY_API_TOKEN` (for `wrangler dev`, in
   `tools/cloudflare/.dev.vars`, gitignored); $0.05/GB after 1,000 GB free.
 - Tests (headless): `godot --headless --path . res://tests/hero_moves_test.tscn`,
-  `res://tests/combat_test.tscn`, `res://tests/streaming_test.tscn`,
+  `res://tests/combat_test.tscn`,
+  `res://tests/landing_feedback_test.tscn` (synthetic floor, no city tiles:
+  soft/medium/slam contacts, dust/ring counts, bounded camera pulse and
+  shake-off for both landing and combat), `res://tests/streaming_test.tscn`,
   `res://tests/coop_test.tscn`, `res://tests/coop_migration_test.tscn`,
   `res://tests/coop_reconnect_test.tscn` and
   `res://tests/coop_public_test.tscn` (they run the signaling server, so
@@ -2527,6 +2539,9 @@ deployed); in a computer's browser the co-op menu links to it.
   free camera, `?spawn=x,y,z,yaw` hero start, `?stats` the stats text
   (also on phones) and console stats, `?quality=low|medium|high`,
   `?mute=1|0`, `?touch=1|0`, `?time=HH:MM`, `?peds=N`, `?gangs=N`, `?traffic=N`, `?trains=N` (0: none), `?demo` / `?demo=fight` / `?demo=city` / `?demo=new` scripted tours for videos,
+  `?demo=landing` a 21-second tour of soft jumps, hard landings, a charged
+  jump and a downward dive, using ordinary hero inputs after the city loads
+  (no time-scale overrides; combine with `?quality=low&solo=1&peds=0&traffic=0&gangs=0`),
   `?host` / `?join=CODE` co-op (a private game), `?solo=1` play alone (no
   public game), `?public=1` join the public game even headless or from a
   script (headless Chrome), `?signal=wss://...` signaling server

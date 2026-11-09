@@ -96,6 +96,7 @@ var _stats: Button
 var _public: Button
 var _sound: Button
 var _invert: Button
+var _camera_shake: Button
 var _address: LineEdit
 var _address_go: Button
 var _address_note: Label
@@ -294,6 +295,7 @@ func _refresh() -> void:
 	_set_toggle(_public, bool(Settings.get_value("online_public", true)))
 	_set_toggle(_sound, not GameAudio.is_muted())
 	_set_toggle(_invert, ThirdPersonCamera.look_y_sign() < 0.0)
+	_set_toggle(_camera_shake, bool(Settings.get_value("camera_shake", true)))
 
 
 func _refresh_sliders() -> void:
@@ -543,6 +545,8 @@ func _controls_page() -> VBoxContainer:
 	_row(page, "Look speed", slider.get_parent())
 	_invert = _switch(func(on: bool) -> void: Settings.set_value("invert_y", on))
 	_row(page, "Swap looking up and down", _invert)
+	_camera_shake = _switch(func(on: bool) -> void: Settings.set_value("camera_shake", on))
+	_row(page, "Camera shake on impacts", _camera_shake)
 	var help := GridContainer.new()
 	help.columns = 2
 	help.add_theme_constant_override("h_separation", 16)

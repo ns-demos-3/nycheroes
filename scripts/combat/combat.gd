@@ -64,6 +64,7 @@ func thug_by_id(net_id: int) -> Thug:
 
 
 func register_hero(hero: Hero) -> void:
+	hero.landed.connect(_landing_feedback.bind(hero))
 	heroes.append(hero)
 
 
@@ -269,3 +270,10 @@ func _shockwave(world_position: Vector3, radius: float) -> void:
 @rpc("any_peer", "call_remote", "unreliable")
 func _danger(world_position: Vector3, radius: float) -> void:
 	danger.emit(world_position, radius)
+
+
+## Copies receive landed from PlayerSync, so ordinary contact dust follows the
+## same replicated motion. Slams already have their own replicated effect.
+func _landing_feedback(speed: float, hero: Hero) -> void:
+	if effects and speed > 18.0 and speed < Hero.SLAM_SPEED and not hero.slam_pending:
+		effects.landing_dust(hero.global_position, clampf(inverse_lerp(18.0, Hero.SLAM_SPEED, speed), 0.0, 1.0) * 0.45)

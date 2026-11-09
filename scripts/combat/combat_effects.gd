@@ -78,17 +78,23 @@ func shockwave(at: Vector3, radius: float) -> void:
 	tween.tween_method(func(value: float) -> void: material.set_shader_parameter("strength", value), 1.0, 0.0, 0.45)
 	tween.chain().tween_callback(ring.queue_free)
 
-	var dust := _burst(_dust_mesh, at + Vector3.UP * 0.5, int(radius * 5.0), 1.4)
+	landing_dust(at, clampf(radius / 11.0, 0.0, 1.0))
+
+
+## Contact dust stays close to the feet and clears quickly, even with shake off.
+## Shared by hard landings and slams; no collisions, damage or danger events.
+func landing_dust(at: Vector3, strength: float) -> void:
+	var dust := _burst(_dust_mesh, at + Vector3.UP * 0.15, int(lerpf(8.0, 24.0, strength)), 0.55)
 	dust.direction = Vector3.UP
 	dust.spread = 85.0
 	dust.flatness = 0.8
-	dust.initial_velocity_min = radius * 1.2
-	dust.initial_velocity_max = radius * 2.2
-	dust.damping_min = radius * 1.5
-	dust.damping_max = radius * 2.5
-	dust.gravity = Vector3(0.0, 0.5, 0.0)
-	dust.scale_amount_min = 1.5
-	dust.scale_amount_max = 3.5
+	dust.initial_velocity_min = lerpf(1.0, 3.0, strength)
+	dust.initial_velocity_max = lerpf(2.0, 6.0, strength)
+	dust.damping_min = 3.0
+	dust.damping_max = 6.0
+	dust.gravity = Vector3(0.0, 0.3, 0.0)
+	dust.scale_amount_min = 0.35
+	dust.scale_amount_max = lerpf(0.7, 1.5, strength)
 	dust.color_ramp = _dust_fade
 
 

@@ -32,7 +32,10 @@ var yaw := 0.0
 var pitch := -0.15
 
 var _distance := 4.5
+## Short damped pulses keep the contact readable without random camera jitter.
 var _shake := 0.0
+var _shake_time := 0.0
+const SHAKE_DURATION := 0.24
 ## The options menu's look speed and invert_y (-1 when swapped).
 var _look_scale := 1.0
 var _look_y := 1.0
@@ -107,9 +110,13 @@ func _process(delta: float) -> void:
 
 	camera.near = _near_plane()
 
-	_shake = maxf(_shake - delta, 0.0)
-	camera.h_offset = randf_range(-1.0, 1.0) * _shake
-	camera.v_offset = randf_range(-1.0, 1.0) * _shake
+	_shake_time = maxf(_shake_time - delta, 0.0)
+	if not bool(Settings.get_value("camera_shake", true)):
+		_shake_time = 0.0
+	var elapsed := SHAKE_DURATION - _shake_time
+	var envelope := pow(_shake_time / SHAKE_DURATION, 2.0)
+	camera.h_offset = sin(elapsed * 55.0) * _shake * envelope * 0.3
+	camera.v_offset = -sin(elapsed * 40.0) * _shake * envelope
 
 
 ## As far out as the hero in front and the city around allow (see the top).
@@ -130,10 +137,18 @@ func _read_look_settings() -> void:
 
 
 func _on_target_landed(impact_speed: float) -> void:
-	if impact_speed > HeroAnimator.HARD_LANDING_SPEED:
-		_shake = maxf(_shake, clampf(impact_speed / 150.0, 0.0, 0.5))
+	if impact_speed > 18.0:
+		_pulse(lerpf(0.025, 0.16, clampf(inverse_lerp(18.0, Hero.MAX_FALL_SPEED, impact_speed), 0.0, 1.0)))
 
 
 func _on_impact(at: Vector3, strength: float) -> void:
 	var falloff := clampf(1.0 - at.distance_to(global_position) / 60.0, 0.0, 1.0)
-	_shake = maxf(_shake, strength * 0.4 * falloff)
+	_pulse(strength * 0.16 * falloff)
+
+
+func _pulse(strength: float) -> void:
+	if not bool(Settings.get_value("camera_shake", true)):
+		return
+	# Landing and slam signals arrive together; use the strongest, never add them.
+	_shake = maxf(_shake * _shake_time / SHAKE_DURATION, strength)
+	_shake_time = SHAKE_DURATION
