@@ -80,7 +80,8 @@ Add them to the URL (`?quality=low&time=21:00`) or, on desktop, after
 `--` on the command line (`-- --quality=low`). A few useful ones:
 `?quality=low|medium|high`, `?time=HH:MM`, `?spawn=x,y,z,yaw`,
 `?peds=N`, `?traffic=N`, `?gangs=N`, `?solo=1`, `?host`, `?join=CODE`,
-`?stats`. The full list is in [docs/ROADMAP.md](docs/ROADMAP.md).
+`?stats`, `?sprint=1` (a repeatable solo street sprint). The full list is in
+[docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Tests
 

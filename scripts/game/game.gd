@@ -76,6 +76,8 @@ var _loading: LoadingScreen
 func _enter_tree() -> void:
 	# Before the city and crowd start and read their launch options.
 	Quality.set_launch_defaults()
+	if LaunchOptions.has("sprint"):
+		LaunchOptions.set_default("solo", "1")
 
 
 func _ready() -> void:
@@ -113,6 +115,11 @@ func _ready() -> void:
 		city.initial_load_finished.connect(func(_seconds: float) -> void:
 			Net.start_public()
 			encounters.hold_for_public = false, CONNECT_ONE_SHOT)
+	if LaunchOptions.has("sprint") and not LaunchOptions.has("demo"):
+		var sprint := StreetSprint.new()
+		sprint.name = "StreetSprint"
+		sprint.game = self
+		add_child(sprint)
 	if LaunchOptions.has("screenshot") and not Device.is_web():
 		_take_screenshot(LaunchOptions.get_string("screenshot"))
 

@@ -2398,6 +2398,19 @@ deployed); in a computer's browser the co-op menu links to it.
   moved in. Pointer lock can't be checked there (headless Chrome never
   grants it). The other tests pass as before.
 
+## Optional street sprint
+
+- `?sprint=1` adds a repeatable solo 100 m street trial on the existing Sixth
+  Avenue stretch: green start, gold finish, elapsed time, distance and a
+  session best. Retry returns to staging and waits for streamed collision.
+  Grounded running and super speed are allowed; jumping, flight, webs,
+  travel, missing collision, leaving the corridor and co-op void the run.
+  Crossings are interpolated, with world-space samples and markers for
+  floating-origin safety. No new city data or assets.
+- `tests/sprint_test.tscn` covers the rules, retry, timeouts and origin shifts.
+  [STREET_SPRINT.md](STREET_SPRINT.md) documents controls, limitations and
+  the native Movie Maker gameplay capture driver.
+
 ## Constraints
 
 - **Browser first, WebGL 2.** Godot web builds use the Compatibility renderer;
@@ -2500,6 +2513,7 @@ deployed); in a computer's browser the co-op menu links to it.
   `tools/cloudflare/.dev.vars`, gitignored); $0.05/GB after 1,000 GB free.
 - Tests (headless): `godot --headless --path . res://tests/hero_moves_test.tscn`,
   `res://tests/combat_test.tscn`, `res://tests/streaming_test.tscn`,
+  `res://tests/sprint_test.tscn` (solo street sprint rules and origin shifts),
   `res://tests/coop_test.tscn`, `res://tests/coop_migration_test.tscn`,
   `res://tests/coop_reconnect_test.tscn` and
   `res://tests/coop_public_test.tscn` (they run the signaling server, so
@@ -2528,7 +2542,8 @@ deployed); in a computer's browser the co-op menu links to it.
   (also on phones) and console stats, `?quality=low|medium|high`,
   `?mute=1|0`, `?touch=1|0`, `?time=HH:MM`, `?peds=N`, `?gangs=N`, `?traffic=N`, `?trains=N` (0: none), `?demo` / `?demo=fight` / `?demo=city` / `?demo=new` scripted tours for videos,
   `?host` / `?join=CODE` co-op (a private game), `?solo=1` play alone (no
-  public game), `?public=1` join the public game even headless or from a
+  public game), `?sprint=1` optional solo street sprint (see STREET_SPRINT.md),
+  `?public=1` join the public game even headless or from a
   script (headless Chrome), `?signal=wss://...` signaling server
   (default: the page's host, port 8070), `?relay=1` co-op only through the
   TURN relay (testing), `?weather=overcast`, `?date=MM-DD` (or
