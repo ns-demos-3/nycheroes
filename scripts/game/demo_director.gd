@@ -90,6 +90,17 @@ func _ready() -> void:
 					[21.5, 21.5]),
 			_shot("", 0.5),
 		]
+	elif LaunchOptions.get_string("demo") == "jump":
+		# Ordinary HeroInput only: movement rules and charge timing stay intact.
+		_yaw = _avenue_yaw + 2.4
+		_shots = [
+			_shot("Hold jump to build power", 2.0),
+			_shot("Release early for a smaller leap", 0.65, _meter_partial_input),
+			_shot("", 4.0),
+			_shot("Hold until FULL, then release", 2.2, _meter_full_input),
+			_shot("The meter clears as you jump", 8.0),
+			_shot("", 1.0),
+		]
 	elif LaunchOptions.get_string("demo") == "fight":
 		_yaw = _avenue_yaw
 		camera.yaw = _yaw
@@ -125,6 +136,8 @@ func _physics_process(delta: float) -> void:
 		_settle -= delta
 		if _settle <= 0.0:
 			print("[demo] start")
+			if LaunchOptions.get_string("demo") == "jump":
+				print("[demo] jump first frame %d" % Engine.get_frames_drawn())
 			_begin(0)
 		return
 	if _index >= _shots.size():
@@ -350,8 +363,10 @@ func _make_caption() -> void:
 	add_child(layer)
 	_caption = Label.new()
 	_caption.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	_caption.offset_top = -110.0
-	_caption.offset_bottom = -50.0
+	if LaunchOptions.get_string("demo") == "jump":
+		_caption.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_caption.offset_top = 160.0 if LaunchOptions.get_string("demo") == "jump" else -110.0
+	_caption.offset_bottom = 220.0 if LaunchOptions.get_string("demo") == "jump" else -50.0
 	_caption.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_caption.add_theme_font_size_override("font_size", 40)
@@ -359,3 +374,11 @@ func _make_caption() -> void:
 	_caption.add_theme_constant_override("outline_size", 10)
 	_caption.modulate.a = 0.0
 	layer.add_child(_caption)
+
+
+func _meter_partial_input(input: HeroInput, t: float) -> void:
+	input.jump_held = t < 0.6
+
+
+func _meter_full_input(input: HeroInput, t: float) -> void:
+	input.jump_held = t < 2.0

@@ -42,12 +42,16 @@ var touch_controls: TouchControls:
 		if _options_button:
 			_options_button.visible = value == null
 
+static var _jump_panel: StyleBoxFlat
+
 var _font: Font
 var _notices: Array = []  # [text, msec when it goes]
 var _options_button: Button
 
 
 func _ready() -> void:
+	# Redraw once menus pause physics, so a held meter clears immediately.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_font = ThemeDB.fallback_font
@@ -97,6 +101,7 @@ func _draw() -> void:
 	_text(Vector2(bar.end.x + 24.0, bar.end.y - 2.0), "Thugs down: %d" % Combat.defeated_count, 18)
 	if hero.mode.name == &"KnockedOut":
 		_text(Vector2(size.x * 0.5 - 110.0, size.y * 0.35), "KNOCKED OUT", 40, MARKER_COLOR)
+	_draw_jump_charge()
 	_draw_coop_status()
 	if city and city.photo_count > 0:
 		var width := _font.get_string_size(AERIAL_CREDIT, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12).x
@@ -118,6 +123,50 @@ func _draw() -> void:
 		var other: Hero = players.remote_heroes[id]
 		_draw_marker(other.global_position + Vector3.UP * 2.6, Net.player_name(id).to_upper(),
 			Net.player_color(id).lightened(0.35), PLAYER_NEAR_ENOUGH)
+
+
+## Read the local hero's actual charge, independent of which input device holds
+## jump. A negative value means there is no usable charge to display.
+func jump_charge() -> float:
+	if hero.frozen or hero.is_remote() or get_tree().paused or hero.mode.name != &"OnFoot":
+		return -1.0
+	var camera := get_viewport().get_camera_3d()
+	if camera is FreeFlyCamera:
+		return -1.0
+	var on_foot := hero.get_mode(&"OnFoot") as OnFootMode
+	if not on_foot.charging or on_foot.charge <= 0.0 or not hero.is_on_floor() or hero.is_in_water():
+		return -1.0
+	return on_foot.charge
+
+
+func _draw_jump_charge() -> void:
+	var charge := jump_charge()
+	if charge < 0.0:
+		return
+	# Centered above the thumbs on phones; neither health nor the action
+	# buttons share this space. The panel never receives input.
+	var bottom := touch_controls.safe_insets.w if touch_controls else 0.0
+	var width := minf(224.0, size.x - 40.0)
+	var panel := Rect2((size.x - width) * 0.5, size.y - bottom - 142.0, width, 64.0)
+	draw_style_box(_charge_panel(), panel)
+	var full := charge >= 1.0
+	var color := Color(1.0, 0.86, 0.3) if full else Color(0.35, 0.85, 1.0)
+	var label := "FULL · RELEASE" if full else "JUMP CHARGE · %d%%" % int(charge * 100.0)
+	var label_width := _font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 16).x
+	_text(Vector2(panel.get_center().x - label_width * 0.5, panel.position.y + 22.0), label, 16, color)
+	var bar := Rect2(panel.position + Vector2(12.0, 34.0), Vector2(width - 24.0, 12.0))
+	draw_rect(bar, Color(0.2, 0.25, 0.32))
+	draw_rect(Rect2(bar.position, Vector2(bar.size.x * charge, bar.size.y)), color)
+	draw_rect(bar, Color(0.85, 0.9, 1.0), false, 1.0)
+
+
+## A shared style avoids allocating a UI resource every frame while charging.
+static func _charge_panel() -> StyleBoxFlat:
+	if _jump_panel == null:
+		_jump_panel = StyleBoxFlat.new()
+		_jump_panel.bg_color = Color(0.025, 0.04, 0.07, 0.88)
+		_jump_panel.set_corner_radius_all(8)
+	return _jump_panel
 
 
 func _draw_coop_status() -> void:

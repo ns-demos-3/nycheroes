@@ -40,7 +40,9 @@ Windows and Mac versions are on the site's download page.
 | Hero and options | O or Esc | |
 | Time of day | T | |
 
-Phones and tablets get touch controls.
+Phones and tablets get touch controls. Holding jump shows a compact charge
+meter; release at any charge, or wait for the gold **FULL · RELEASE** cue
+for maximum power.
 
 ## Running it locally
 
