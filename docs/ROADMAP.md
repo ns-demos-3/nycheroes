@@ -53,6 +53,14 @@ peer can drive one later. Nearby tiles get collision.
 - Punch combos, dive attacks, landing slams and super speed rams; defeated
   thugs ragdoll, bleed, and stay on the street while you're nearby.
 - Hero health, knockouts, and a HUD with a marker to the nearest thug.
+  Health shows a numeric value; at 30% or below a steady, compact warning
+  asks the player to avoid hits. Actual regeneration shows RECOVERING,
+  and knockouts show seconds until automatic get-up beside the health bar,
+  leaving the action clear. Touch layout keeps these below the top-left bar
+  and moves the thug count below them, clear of the thumb controls.
+  Damage, regeneration and get-up rules are unchanged. Check with
+  `res://tests/health_hud_test.tscn`; use `?touch=1&solo=1&gangs=1`
+  to review the phone HUD during a fight (no new launch options).
 
 ## 4. All five boroughs and bridges (done)
 
@@ -2499,7 +2507,8 @@ deployed); in a computer's browser the co-op menu links to it.
   `TURN_KEY_ID` / `TURN_KEY_API_TOKEN` (for `wrangler dev`, in
   `tools/cloudflare/.dev.vars`, gitignored); $0.05/GB after 1,000 GB free.
 - Tests (headless): `godot --headless --path . res://tests/hero_moves_test.tscn`,
-  `res://tests/combat_test.tscn`, `res://tests/streaming_test.tscn`,
+  `res://tests/combat_test.tscn`, `res://tests/health_hud_test.tscn` (low
+  health, recovery and automatic get-up notices), `res://tests/streaming_test.tscn`,
   `res://tests/coop_test.tscn`, `res://tests/coop_migration_test.tscn`,
   `res://tests/coop_reconnect_test.tscn` and
   `res://tests/coop_public_test.tscn` (they run the signaling server, so

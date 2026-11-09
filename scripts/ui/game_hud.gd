@@ -16,6 +16,8 @@ const NEAR_ENOUGH := 35.0
 const PLAYER_NEAR_ENOUGH := 120.0
 ## In a big public game, only the nearest few players get a marker.
 const MAX_PLAYER_MARKERS := 8
+## Warn at or below 30%; text makes the warning useful without color alone.
+const LOW_HEALTH := 0.3
 const EDGE_MARGIN := 48.0
 ## On touch screens, markers keep this far from the right edge, off the buttons.
 const TOUCH_BUTTONS_WIDTH := 100.0
@@ -93,10 +95,12 @@ func _draw() -> void:
 	var health := hero.health / Hero.MAX_HEALTH
 	var fill := Color(0.85, 0.15, 0.12).lerp(Color(0.2, 0.8, 0.3), health)
 	draw_rect(Rect2(bar.position, Vector2(bar.size.x * health, bar.size.y)), fill)
-	_text(bar.position + Vector2(0.0, -8.0), "HEALTH", 14)
-	_text(Vector2(bar.end.x + 24.0, bar.end.y - 2.0), "Thugs down: %d" % Combat.defeated_count, 18)
-	if hero.mode.name == &"KnockedOut":
-		_text(Vector2(size.x * 0.5 - 110.0, size.y * 0.35), "KNOCKED OUT", 40, MARKER_COLOR)
+	_text(bar.position + Vector2(0.0, -8.0), "HEALTH  %d / %d" % [ceili(hero.health), int(Hero.MAX_HEALTH)], 14)
+	var count_at := Vector2(bar.end.x + 24.0, bar.end.y - 2.0)
+	if touch_controls:
+		count_at = bar.position + Vector2(0.0, 76.0)
+	_text(count_at, "Thugs down: %d" % Combat.defeated_count, 18)
+	_draw_health_notice(bar)
 	_draw_coop_status()
 	if city and city.photo_count > 0:
 		var width := _font.get_string_size(AERIAL_CREDIT, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12).x
@@ -118,6 +122,37 @@ func _draw() -> void:
 		var other: Hero = players.remote_heroes[id]
 		_draw_marker(other.global_position + Vector3.UP * 2.6, Net.player_name(id).to_upper(),
 			Net.player_color(id).lightened(0.35), PLAYER_NEAR_ENOUGH)
+
+
+## Read the local hero's real timers rather than running a second HUD clock.
+## No flashing, screen tint, or center overlay: the fight stays visible.
+func health_notice() -> String:
+	if hero.mode.name == &"KnockedOut":
+		var down := hero.mode as KnockedOutMode
+		return "KNOCKED OUT · Up in %ds" % ceili(down.seconds_until_get_up())
+	if hero.health >= Hero.MAX_HEALTH:
+		return ""
+	if hero.recovery_delay_remaining() <= 0.0:
+		return "RECOVERING · Avoid hits"
+	if hero.health <= Hero.MAX_HEALTH * LOW_HEALTH:
+		return "LOW HEALTH · Avoid hits"
+	return ""
+
+
+func _draw_health_notice(bar: Rect2) -> void:
+	var notice := health_notice()
+	if notice.is_empty():
+		return
+	var recovering := hero.mode.name != &"KnockedOut" and hero.recovery_delay_remaining() <= 0.0
+	var color := Color(0.55, 1.0, 0.7) if recovering else Color(1.0, 0.65, 0.4)
+	var at := bar.position + Vector2(0.0, -36.0)
+	if touch_controls:
+		at = bar.position + Vector2(0.0, 48.0)
+	var width := _font.get_string_size(notice, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 16).x
+	draw_rect(Rect2(at + Vector2(-6.0, -19.0), Vector2(width + 12.0, 26.0)), Color(0.04, 0.04, 0.06, 0.85))
+	_text(at, notice, 16, color)
+	if not recovering:
+		draw_rect(bar.grow(3.0), color, false, 2.0)
 
 
 func _draw_coop_status() -> void:

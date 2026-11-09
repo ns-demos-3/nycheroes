@@ -186,6 +186,11 @@ func face_toward(direction: Vector3, max_step := INF) -> void:
 	facing = rotate_toward(facing, atan2(-direction.x, -direction.z), max_step)
 
 
+## Seconds without another hit until health starts returning (for the local HUD).
+func recovery_delay_remaining() -> float:
+	return maxf(_regen_delay, 0.0)
+
+
 ## Hit by a thug: lose health, get knocked back, and go down at zero.
 func take_hit(damage: float, push: Vector3) -> void:
 	if not can_be_attacked() or mode.name == &"Dive":

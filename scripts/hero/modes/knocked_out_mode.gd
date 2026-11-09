@@ -24,3 +24,8 @@ func physics_update(delta: float) -> StringName:
 	hero.health = Hero.MAX_HEALTH
 	Combat.shockwave(hero.global_position, 6.0, 0.0, 12.0)
 	return &"OnFoot"
+
+
+## Uses the actual mode timer so the HUD cannot drift from the get-up.
+func seconds_until_get_up() -> float:
+	return maxf(down_time - _time, 0.0)
