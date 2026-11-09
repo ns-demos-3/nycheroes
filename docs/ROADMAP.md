@@ -2398,6 +2398,22 @@ deployed); in a computer's browser the co-op menu links to it.
   moved in. Pointer lock can't be checked there (headless Chrome never
   grants it). The other tests pass as before.
 
+## City exploration discoveries (done)
+
+The optional HUD **Explore NYC** button starts a local four-stop session:
+Times Square, Flatiron Building, Brooklyn Bridge and DUMBO. Their visit
+spheres use the street viewpoints already documented in REFERENCE.md.
+Stay within 70 m in three dimensions for one second to discover a spot.
+A concise notice confirms each first visit; the HUD retains progress when
+paused and points to the nearest unvisited spot. Reloading resets progress.
+High flyovers do not count. No rewards, persistence, new tiles or assets;
+co-op players explore independently. Uses Hero.world_position() and converts
+marker positions through WorldOrigin, so origin shifts preserve progress.
+
+`?explore=1` starts enabled (also `-- --explore=1` on desktop).
+`godot --headless --path . res://tests/exploration_test.tscn` checks opt-in,
+height, dwell reset, origin shifts, duplicate visits, pause and completion.
+
 ## Constraints
 
 - **Browser first, WebGL 2.** Godot web builds use the Compatibility renderer;

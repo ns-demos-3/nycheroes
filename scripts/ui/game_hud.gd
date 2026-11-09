@@ -42,6 +42,9 @@ var touch_controls: TouchControls:
 		if _options_button:
 			_options_button.visible = value == null
 
+## Progress belongs to this local HUD, never remote heroes or saved settings.
+var discoveries := ExplorationDiscoveries.new()
+var _explore_button: Button
 var _font: Font
 var _notices: Array = []  # [text, msec when it goes]
 var _options_button: Button
@@ -66,6 +69,7 @@ func _ready() -> void:
 		if Net.is_online() and not Net.is_public:
 			notify("You're the host now" if id == Net.local_id() else "%s is now the host" % Net.player_name(id)))
 	_add_options_button()
+	_add_explore_button()
 
 
 ## Shows a line near the top of the screen for a few seconds.
@@ -80,7 +84,12 @@ func current_notices() -> PackedStringArray:
 	return PackedStringArray(_notices.map(func(notice: Array) -> String: return notice[0]))
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	var camera := get_viewport().get_camera_3d()
+	if not hero.frozen and camera and camera.get_parent().get_parent() is ThirdPersonCamera:
+		var found := discoveries.sample(hero.world_position(), delta)
+		if found >= 0:
+			notify("Discovered: %s  ·  %d / %d" % [discoveries.NAMES[found], discoveries.visited.size(), discoveries.SPOTS.size()])
 	queue_redraw()
 
 
@@ -98,6 +107,7 @@ func _draw() -> void:
 	if hero.mode.name == &"KnockedOut":
 		_text(Vector2(size.x * 0.5 - 110.0, size.y * 0.35), "KNOCKED OUT", 40, MARKER_COLOR)
 	_draw_coop_status()
+	_draw_exploration()
 	if city and city.photo_count > 0:
 		var width := _font.get_string_size(AERIAL_CREDIT, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12).x
 		var at := Vector2(size.x - width - 16.0, size.y - 12.0)
@@ -228,3 +238,33 @@ func _add_options_button() -> void:
 func _text(at: Vector2, text: String, font_size: int, color := Color.WHITE) -> void:
 	draw_string_outline(_font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, 4, Color.BLACK)
 	draw_string(_font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, color)
+
+
+func _add_explore_button() -> void:
+	_explore_button = Button.new()
+	_explore_button.focus_mode = Control.FOCUS_NONE
+	_explore_button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+	_explore_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	_explore_button.add_theme_font_size_override("font_size", 16)
+	_explore_button.pressed.connect(func() -> void:
+		discoveries.enabled = not discoveries.enabled)
+	discoveries.enabled = LaunchOptions.get_string("explore", "0") == "1"
+	add_child(_explore_button)
+
+
+func _draw_exploration() -> void:
+	var at := Vector2(24.0, 200.0)
+	if touch_controls:
+		at = Vector2(24.0 + touch_controls.safe_insets.x, 98.0 + touch_controls.safe_insets.y)
+	_explore_button.position = at
+	_explore_button.text = "EXPLORING %d / 4  ·  Pause" % discoveries.visited.size() if discoveries.enabled else "Explore NYC  ·  %d / 4" % discoveries.visited.size()
+	if not discoveries.enabled:
+		return
+	var next := discoveries.nearest(hero.world_position())
+	var line := "All four discovered! Session complete."
+	if next >= 0:
+		line = "%s  ·  %d m" % [discoveries.NAMES[next], hero.world_position().distance_to(discoveries.SPOTS[next])]
+		_draw_marker(WorldOrigin.to_local(discoveries.SPOTS[next]), "EXPLORE", Color(0.4, 0.9, 1.0), discoveries.RADIUS)
+	draw_rect(Rect2(at + Vector2(0, 38), Vector2(320, 54)), Color(0, 0, 0, 0.65))
+	_text(at + Vector2(10, 60), line, 16)
+	_text(at + Vector2(10, 82), "Visit nearby at street height. This session only.", 13)
